@@ -74,99 +74,80 @@ Bukti ping dan traceroute di atas menunjukkan dua tujuan LAN yang diuji. Bukti i
 
 ## 4. DHCP
 
-DHCP memberikan IP, subnet mask, gateway, dan DNS secara otomatis kepada klien. Router dan server menggunakan IP statis. CCTV harus memperoleh alamat dari server DC melalui relay, bukan dari pool DHCP router.
+Bukti berikut menunjukkan pembagian IP otomatis pada LAN Pegawai Balai Kota dan CCTV Kota. DHCP CCTV dilayani server DC melalui relay pada R-DC.
 
-### Pool DHCP WiFi dan Sensor Utara
+### Request ulang DHCP Pegawai Balai Kota
 
-![Pool DHCP WiFi dan Sensor Utara](<assets/Screenshot 2026-11-15 135224.png>)
+![Request ulang DHCP Pegawai Balai Kota](<images/Screenshot 2026-11-15 223544.png>)
 
-Konfigurasi menampilkan pool WIFI_UTARA untuk 10.16.0.0/18 dan SENSOR_UTARA untuk 10.16.236.0/23. Gateway masing-masing adalah 10.16.0.1 dan 10.16.236.1, dengan DNS 10.16.240.2. Kedua gateway dikecualikan dari alokasi DHCP agar tidak diberikan kepada klien. Bukti ini menunjukkan konfigurasi pool; keberhasilan lease perlu dibuktikan melalui pengalamatan klien dan binding.
+Setelah `ipconfig /release` dan `ipconfig /renew`, PC memperoleh IP **10.16.224.2**, subnet mask **255.255.248.0**, gateway **10.16.224.1**, dan DNS **10.16.240.2**. Output `ipconfig /all` menunjukkan DHCP server **10.16.224.1**, yaitu R-PUSAT.
 
-**Bukti tambahan yang diperlukan:** request ulang DHCP Pegawai dan CCTV beserta IP, gateway, DNS; binding router untuk Pegawai; IP statis server; pool CCTV pada server DC; serta `ip helper-address 10.16.240.2` pada interface CCTV R-DC. Pool server bukan daftar lease.
+### Binding dan pool DHCP R-PUSAT
+
+![Binding dan pool DHCP R-PUSAT](<images/Screenshot 2026-11-15 223618.png>)
+
+Perintah `show ip dhcp binding` mencatat IP **10.16.224.2** untuk MAC **0000.0CE7.8B11** dengan tipe Automatic, sesuai klien Pegawai. Pool **PEGAWAI_BALAIKOTA** menunjukkan satu alamat disewakan dan satu alamat dikecualikan.
+
+### Konfigurasi DHCP Pegawai Balai Kota
+
+![Konfigurasi DHCP Pegawai Balai Kota](<images/Screenshot 2026-11-15 223738.png>)
+
+Pool **PEGAWAI_BALAIKOTA** melayani jaringan **10.16.224.0/21**, dengan gateway **10.16.224.1** dan DNS **10.16.240.2**. Alamat gateway dikecualikan melalui `ip dhcp excluded-address` agar tidak dibagikan kepada klien.
+
+### Request ulang DHCP CCTV Kota
+
+![Request ulang DHCP CCTV Kota](<images/Screenshot 2026-11-15 223815.png>)
+
+PC CCTV memperoleh IP **10.16.96.3**, subnet mask **255.255.224.0**, gateway **10.16.96.1**, dan DNS **10.16.240.2** setelah renewal. DHCP server yang tercantum adalah **10.16.240.2**, membuktikan klien memperoleh konfigurasi dari server DC.
+
+### DHCP relay pada R-DC
+
+![DHCP relay pada R-DC](<images/Screenshot 2026-11-15 223932.png>)
+
+Interface **GigabitEthernet0/0** pada LAN CCTV menggunakan IP **10.16.96.1/19**. Konfigurasi `ip helper-address 10.16.240.2` meneruskan permintaan DHCP klien CCTV ke server pada LAN DC.
+
+### IP statis server DC
+
+![IP statis server DC](<images/Screenshot 2026-11-15 224038.png>)
+
+Server **SRV-DC-CORE** menggunakan pengaturan Static dengan IP **10.16.240.2/24**, gateway **10.16.240.1**, dan DNS **10.16.240.2**. IP tetap ini menjadi alamat tujuan DHCP relay.
+
+### Pool CCTV pada server DC
+
+![Pool CCTV pada server DC](<images/Screenshot 2026-11-15 224054.png>)
+
+Layanan DHCP pada **SRV-DC-CORE** aktif dengan pool **CCTV_KOTA**, alamat awal **10.16.96.2**, mask **255.255.224.0**, dan kapasitas **6.000 klien**. Gateway yang dibagikan adalah **10.16.96.1** dan DNS **10.16.240.2**. Gambar ini menunjukkan konfigurasi pool, bukan daftar lease server.
 
 ## 5. NAT
 
-NAT overload pada R-PUSAT dirancang menerjemahkan IP privat klien ke satu IP publik, yaitu 203.0.113.9. Interface menuju ISP adalah Serial0/0/0. R-ISP tidak diberi rute menuju blok privat internal.
+R-PUSAT menggunakan NAT overload agar klien internal dapat mengakses server **8.8.8.8** melalui satu IP publik **203.0.113.9**.
 
-```text
-access-list 20 permit 10.16.0.0 0.0.255.255
-ip nat inside source list 20 interface Serial0/0/0 overload
-```
+### Akses 8.8.8.8 dari Balai Kota
 
-**Bukti yang perlu dicocokkan dengan PNG lanjutan:** ping 8.8.8.8 dari beberapa wilayah; NAT translations dengan beberapa inside local dan inside global yang sama; rule NAT serta penandaan inside/outside; dan tabel routing R-ISP tanpa rute privat. Konfigurasi di atas merupakan referensi rancangan, bukan pembacaan screenshot lanjutan yang belum tersedia.
+![Akses 8.8.8.8 dari Balai Kota](<images/Screenshot 2026-11-15 224119.png>)
 
-## Bukti lanjutan — urutan nama asli
+PC Pegawai dengan IP privat **10.16.224.2** berhasil melakukan ping ke **8.8.8.8**. Empat paket mendapat balasan dengan **packet loss 0%**, menunjukkan akses ke server internet simulasi dari LAN Balai Kota.
 
-Dua belas file berikut belum dapat dibaca isinya. Tautannya sudah disiapkan sesuai urutan pada daftar pengguna. Setelah file asli tersedia, setiap gambar perlu ditempatkan pada bagian DHCP atau NAT yang tepat dan diberi keterangan berdasarkan hasil yang terlihat.
+### Akses 8.8.8.8 dari CCTV Kota
 
-### Bukti lanjutan 01
+![Akses 8.8.8.8 dari CCTV Kota](<images/Screenshot 2026-11-15 224146.png>)
 
-![Bukti lanjutan 01](<assets/Screenshot 2026-11-15 223544.png>)
+PC CCTV dengan IP privat **10.16.96.3** juga berhasil melakukan ping ke **8.8.8.8** dengan empat balasan dan **packet loss 0%**. Bersama bukti sebelumnya, pengujian menunjukkan akses dari dua LAN berbeda.
 
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
+### Tabel translasi dan statistik NAT
 
-### Bukti lanjutan 02
+![Tabel translasi dan statistik NAT](<images/Screenshot 2026-11-15 224228.png>)
 
-![Bukti lanjutan 02](<assets/Screenshot 2026-11-15 223618.png>)
+Tabel `show ip nat translations` menunjukkan IP privat **10.16.224.2** dan **10.16.96.3** diterjemahkan menjadi satu IP publik **203.0.113.9** untuk mengakses **8.8.8.8**. Identitas ICMP membedakan sesi melalui NAT overload/PAT. Statistik NAT menunjukkan **Serial0/0/0** sebagai interface outside dan interface jaringan internal sebagai inside.
 
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
+### Rule NAT overload pada R-PUSAT
 
-### Bukti lanjutan 03
+![Rule NAT overload pada R-PUSAT](<images/Screenshot 2026-11-15 224302.png>)
 
-![Bukti lanjutan 03](<assets/Screenshot 2026-11-15 223738.png>)
+Rule `ip nat inside source list 20 interface Serial0/0/0 overload` menerjemahkan sumber yang cocok dengan ACL 20 menggunakan IP interface menuju ISP. Opsi `overload` memungkinkan beberapa klien memakai satu IP publik. Default route menuju **203.0.113.10** mengarahkan trafik keluar ke R-ISP.
 
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
+### Tabel routing R-ISP tanpa rute privat
 
-### Bukti lanjutan 04
+![Tabel routing R-ISP tanpa rute privat](<images/Screenshot 2026-11-15 224336.png>)
 
-![Bukti lanjutan 04](<assets/Screenshot 2026-11-15 223815.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 05
-
-![Bukti lanjutan 05](<assets/Screenshot 2026-11-15 223932.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 06
-
-![Bukti lanjutan 06](<assets/Screenshot 2026-11-15 224038.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 07
-
-![Bukti lanjutan 07](<assets/Screenshot 2026-11-15 224054.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 08
-
-![Bukti lanjutan 08](<assets/Screenshot 2026-11-15 224119.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 09
-
-![Bukti lanjutan 09](<assets/Screenshot 2026-11-15 224146.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 10
-
-![Bukti lanjutan 10](<assets/Screenshot 2026-11-15 224228.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 11
-
-![Bukti lanjutan 11](<assets/Screenshot 2026-11-15 224302.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-### Bukti lanjutan 12
-
-![Bukti lanjutan 12](<assets/Screenshot 2026-11-15 224336.png>)
-
-**Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
+R-ISP hanya menampilkan jaringan terhubung **8.8.8.0/24** dan **203.0.113.8/30**, beserta alamat lokal interfacenya. Tidak terdapat rute menuju jaringan privat internal **10.16.x.x**. Dikombinasikan dengan ping dan tabel translasi, hasil ini mendukung bahwa akses klien berjalan melalui NAT R-PUSAT.
