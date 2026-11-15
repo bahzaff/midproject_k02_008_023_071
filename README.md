@@ -4,7 +4,7 @@
 | Nama | NRP |
 | :--- | :--- |
 | Barra Ahza Fakhrullah | 5027251023 |
-| isi ges | 50272510xx |
+| Silfi Rochmatul AuliyH | 5027251008 |
 | isi ges | 50272510xx |
 
 ---
