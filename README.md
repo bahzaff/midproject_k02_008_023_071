@@ -78,43 +78,43 @@ Bukti berikut menunjukkan pembagian IP otomatis pada LAN Pegawai Balai Kota dan 
 
 ### Request ulang DHCP Pegawai Balai Kota
 
-![Request ulang DHCP Pegawai Balai Kota](<images/Screenshot 2026-11-15 223544.png>)
+![Request ulang DHCP Pegawai Balai Kota](<assets/Screenshot 2026-11-15 223544.png>)
 
 Setelah `ipconfig /release` dan `ipconfig /renew`, PC memperoleh IP **10.16.224.2**, subnet mask **255.255.248.0**, gateway **10.16.224.1**, dan DNS **10.16.240.2**. Output `ipconfig /all` menunjukkan DHCP server **10.16.224.1**, yaitu R-PUSAT.
 
 ### Binding dan pool DHCP R-PUSAT
 
-![Binding dan pool DHCP R-PUSAT](<images/Screenshot 2026-11-15 223618.png>)
+![Binding dan pool DHCP R-PUSAT](<assets/Screenshot 2026-11-15 223618.png>)
 
 Perintah `show ip dhcp binding` mencatat IP **10.16.224.2** untuk MAC **0000.0CE7.8B11** dengan tipe Automatic, sesuai klien Pegawai. Pool **PEGAWAI_BALAIKOTA** menunjukkan satu alamat disewakan dan satu alamat dikecualikan.
 
 ### Konfigurasi DHCP Pegawai Balai Kota
 
-![Konfigurasi DHCP Pegawai Balai Kota](<images/Screenshot 2026-11-15 223738.png>)
+![Konfigurasi DHCP Pegawai Balai Kota](<assets/Screenshot 2026-11-15 223738.png>)
 
 Pool **PEGAWAI_BALAIKOTA** melayani jaringan **10.16.224.0/21**, dengan gateway **10.16.224.1** dan DNS **10.16.240.2**. Alamat gateway dikecualikan melalui `ip dhcp excluded-address` agar tidak dibagikan kepada klien.
 
 ### Request ulang DHCP CCTV Kota
 
-![Request ulang DHCP CCTV Kota](<images/Screenshot 2026-11-15 223815.png>)
+![Request ulang DHCP CCTV Kota](<assets/Screenshot 2026-11-15 223815.png>)
 
 PC CCTV memperoleh IP **10.16.96.3**, subnet mask **255.255.224.0**, gateway **10.16.96.1**, dan DNS **10.16.240.2** setelah renewal. DHCP server yang tercantum adalah **10.16.240.2**, membuktikan klien memperoleh konfigurasi dari server DC.
 
 ### DHCP relay pada R-DC
 
-![DHCP relay pada R-DC](<images/Screenshot 2026-11-15 223932.png>)
+![DHCP relay pada R-DC](<assets/Screenshot 2026-11-15 223932.png>)
 
 Interface **GigabitEthernet0/0** pada LAN CCTV menggunakan IP **10.16.96.1/19**. Konfigurasi `ip helper-address 10.16.240.2` meneruskan permintaan DHCP klien CCTV ke server pada LAN DC.
 
 ### IP statis server DC
 
-![IP statis server DC](<images/Screenshot 2026-11-15 224038.png>)
+![IP statis server DC](<assets/Screenshot 2026-11-15 224038.png>)
 
 Server **SRV-DC-CORE** menggunakan pengaturan Static dengan IP **10.16.240.2/24**, gateway **10.16.240.1**, dan DNS **10.16.240.2**. IP tetap ini menjadi alamat tujuan DHCP relay.
 
 ### Pool CCTV pada server DC
 
-![Pool CCTV pada server DC](<images/Screenshot 2026-11-15 224054.png>)
+![Pool CCTV pada server DC](<assets/Screenshot 2026-11-15 224054.png>)
 
 Layanan DHCP pada **SRV-DC-CORE** aktif dengan pool **CCTV_KOTA**, alamat awal **10.16.96.2**, mask **255.255.224.0**, dan kapasitas **6.000 klien**. Gateway yang dibagikan adalah **10.16.96.1** dan DNS **10.16.240.2**. Gambar ini menunjukkan konfigurasi pool, bukan daftar lease server.
 
@@ -124,30 +124,30 @@ R-PUSAT menggunakan NAT overload agar klien internal dapat mengakses server **8.
 
 ### Akses 8.8.8.8 dari Balai Kota
 
-![Akses 8.8.8.8 dari Balai Kota](<images/Screenshot 2026-11-15 224119.png>)
+![Akses 8.8.8.8 dari Balai Kota](<assets/Screenshot 2026-11-15 224119.png>)
 
 PC Pegawai dengan IP privat **10.16.224.2** berhasil melakukan ping ke **8.8.8.8**. Empat paket mendapat balasan dengan **packet loss 0%**, menunjukkan akses ke server internet simulasi dari LAN Balai Kota.
 
 ### Akses 8.8.8.8 dari CCTV Kota
 
-![Akses 8.8.8.8 dari CCTV Kota](<images/Screenshot 2026-11-15 224146.png>)
+![Akses 8.8.8.8 dari CCTV Kota](<assets/Screenshot 2026-11-15 224146.png>)
 
 PC CCTV dengan IP privat **10.16.96.3** juga berhasil melakukan ping ke **8.8.8.8** dengan empat balasan dan **packet loss 0%**. Bersama bukti sebelumnya, pengujian menunjukkan akses dari dua LAN berbeda.
 
 ### Tabel translasi dan statistik NAT
 
-![Tabel translasi dan statistik NAT](<images/Screenshot 2026-11-15 224228.png>)
+![Tabel translasi dan statistik NAT](<assets/Screenshot 2026-11-15 224228.png>)
 
 Tabel `show ip nat translations` menunjukkan IP privat **10.16.224.2** dan **10.16.96.3** diterjemahkan menjadi satu IP publik **203.0.113.9** untuk mengakses **8.8.8.8**. Identitas ICMP membedakan sesi melalui NAT overload/PAT. Statistik NAT menunjukkan **Serial0/0/0** sebagai interface outside dan interface jaringan internal sebagai inside.
 
 ### Rule NAT overload pada R-PUSAT
 
-![Rule NAT overload pada R-PUSAT](<images/Screenshot 2026-11-15 224302.png>)
+![Rule NAT overload pada R-PUSAT](<assets/Screenshot 2026-11-15 224302.png>)
 
 Rule `ip nat inside source list 20 interface Serial0/0/0 overload` menerjemahkan sumber yang cocok dengan ACL 20 menggunakan IP interface menuju ISP. Opsi `overload` memungkinkan beberapa klien memakai satu IP publik. Default route menuju **203.0.113.10** mengarahkan trafik keluar ke R-ISP.
 
 ### Tabel routing R-ISP tanpa rute privat
 
-![Tabel routing R-ISP tanpa rute privat](<images/Screenshot 2026-11-15 224336.png>)
+![Tabel routing R-ISP tanpa rute privat](<assets/Screenshot 2026-11-15 224336.png>)
 
 R-ISP hanya menampilkan jaringan terhubung **8.8.8.0/24** dan **203.0.113.8/30**, beserta alamat lokal interfacenya. Tidak terdapat rute menuju jaringan privat internal **10.16.x.x**. Dikombinasikan dengan ping dan tabel translasi, hasil ini mendukung bahwa akses klien berjalan melalui NAT R-PUSAT.
