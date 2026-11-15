@@ -5,7 +5,7 @@
 | :--- | :--- |
 | Barra Ahza Fakhrullah | 5027251023 |
 | Silfi Rochmatul AuliyH | 5027251008 |
-| isi ges | 50272510xx |
+| Muhammad Atallah Mas'udi | 5027251071 |
 
 ---
 
