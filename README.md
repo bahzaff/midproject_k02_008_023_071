@@ -170,17 +170,3 @@ Dua belas file berikut belum dapat dibaca isinya. Tautannya sudah disiapkan sesu
 ![Bukti lanjutan 12](<assets/Screenshot 2026-11-15 224336.png>)
 
 **Penjelasan menunggu isi PNG:** nama file telah diketahui, tetapi output konfigurasi atau pengujian di dalam gambar belum tersedia untuk diperiksa. Jangan menganggap gambar ini sebagai bukti lulus sebelum isinya dicocokkan.
-
-## Referensi requirement
-
-### Ketentuan rekaman soal 3–5
-
-![Ketentuan rekaman soal 3–5](<assets/Screenshot 2026-11-15 204608.png>)
-
-Gambar ini berisi ketentuan demonstrasi: routing table, ping dan traceroute antar-LAN; request ulang DHCP dan bukti CCTV dari server DC; serta pengujian akses 8.8.8.8, routing ISP, dan rule NAT. Ini merupakan acuan rekaman, bukan hasil pengujian jaringan.
-
-### Kriteria penilaian soal 3–5
-
-![Kriteria penilaian soal 3–5](<assets/Screenshot 2026-11-15 222652.png>)
-
-Gambar ini berisi kriteria static routing, DHCP, dan NAT. Kriteria mencakup konektivitas seluruh LAN, arah default route, IP statis router/server, DHCP klien termasuk CCTV dari server, serta akses internet melalui satu IP publik tanpa rute privat pada ISP. Ini merupakan acuan penilaian, bukan screenshot konfigurasi.
